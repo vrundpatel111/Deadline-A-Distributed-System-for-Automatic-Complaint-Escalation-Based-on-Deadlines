@@ -4,6 +4,7 @@ import com.auracity.complaint_service.dao.ComplaintDAO;
 import com.auracity.complaint_service.entity.*;
 import com.auracity.complaint_service.event.ComplaintCreatedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
@@ -13,11 +14,17 @@ public class ComplaintService {
 
     private final ComplaintDAO complaintDAO;
     private final KafkaTemplate<String, ComplaintCreatedEvent> kafkaTemplate;
+    private final String complaintCreatedTopic;
 
     @Autowired
-    public ComplaintService(ComplaintDAO complaintDAO, KafkaTemplate<String, ComplaintCreatedEvent> kafkaTemplate) {
+    public ComplaintService(
+            ComplaintDAO complaintDAO,
+            KafkaTemplate<String, ComplaintCreatedEvent> kafkaTemplate,
+            @Value("${app.kafka.topics.complaint-created}") String complaintCreatedTopic
+    ) {
         this.complaintDAO = complaintDAO;
         this.kafkaTemplate = kafkaTemplate;
+        this.complaintCreatedTopic = complaintCreatedTopic;
     }
 
     public Complaint createComplaint(Complaint complaint) {
@@ -29,7 +36,7 @@ public class ComplaintService {
             savedComplaint.getSeverity().name(),
             savedComplaint.getCreatedAt()
         );
-        kafkaTemplate.send("complaint-topic", event);
+        kafkaTemplate.send(complaintCreatedTopic, savedComplaint.getId().toString(), event);
         
         return savedComplaint;
     }
