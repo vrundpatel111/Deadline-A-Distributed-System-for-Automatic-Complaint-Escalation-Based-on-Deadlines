@@ -1,0 +1,49 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  datasource:
+    url: jdbc:postgresql://ep-cold-fog-a13rf1hh-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channelBinding=require
+    username: neondb_owner
+    password: npg_zie8fp2IGWkO
+    driver-class-name: org.postgresql.Driver
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+        - id: core-service-emissions
+          uri: lb://core-service
+          predicates:
+            - Path=/api/emissions/**
+        - id: core-service-credits
+          uri: lb://core-service
+          predicates:
+            - Path=/api/credits/**
+        - id: core-service-verifications
+          uri: lb://core-service
+          predicates:
+            - Path=/api/verifications/**
+        - id: trade-service
+          uri: lb://trade-service
+          predicates:
+            - Path=/api/trading/**
+
+eureka:
+  client:
+    enabled: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+jwt:
+  secret: 1eCXep68N0UQLUnjU3ZzA5mP/f+YfZI4KyDOg2CeWspe6kMGlMZlxdQJEct5QS6WWFmNoePJ14/isUCCQfvPoA==
